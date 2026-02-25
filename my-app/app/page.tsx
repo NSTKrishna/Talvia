@@ -1,56 +1,86 @@
 "use client";
 
-import { Copy, Share2, ExternalLink, Star, GitCommit, GitPullRequest, AlertCircle, Eye, Building2, Wifi} from "lucide-react";
-import {getGithubUser , getGithubRepos} from "./api/github.api";
+import Image from "next/image";
+import {
+  Copy,
+  Share2,
+  ExternalLink,
+  Star,
+  GitCommit,
+  GitPullRequest,
+  AlertCircle,
+  Eye,
+  Building2,
+  Wifi,
+} from "lucide-react";
+import { getGithubUser, getGithubRepos } from "./api/github.api";
 import { useEffect, useState } from "react";
-import { GithubRepo , GithubUser } from "./api/types";
+import { GithubRepo, GithubUser } from "./api/types";
 
 export default function ProfilePage() {
-
   const [user, setUser] = useState<GithubUser | null>(null);
   const [repos, setRepos] = useState<GithubRepo[]>([]);
+  const [loading, setLoading] = useState(true);
 
   useEffect(() => {
     async function loadData() {
       try {
-        const userRes = await getGithubUser("Bhup-GitHUB");
-        const repoRes = await getGithubRepos("Bhup-GitHUB",10);
-
-        console.log("USER:", userRes.data.user);
-        console.log("REPOS:", repoRes.data.user.repositories.nodes);
+        const userRes = await getGithubUser("khuswant18");
+        const repoRes = await getGithubRepos("khuswant18", 10);
 
         setUser(userRes.data.user);
         setRepos(repoRes.data.user.repositories.nodes);
       } catch (err) {
         console.error("Error loading GitHub data:", err);
+      } finally {
+        setLoading(false);
       }
     }
 
     loadData();
   }, []);
 
-  const projects = [
-    {name: "electron-p2p",language: "JavaScript",stars: 21,description: ""},
-    { name: "video-pipeline", language: "Go", stars: 18, description: "" },
-    { name: "wp-des", language: "TypeScript", stars: 19, description: "" },
-    { name: "payments-gateway", language: "Rust", stars: 8, description: "" },
-    { name: "StartDB", language: "Go", stars: 6, description: "StartDB is a next-generation...", },
-    { name: "cf-workers-clone", language: "TypeScript", stars: 4, description: "cloudflare workers clone"}];
+  // Compute language stats from repos
+  const langColorMap: Record<string, string> = {
+    TypeScript: "#3178c6",
+    JavaScript: "#f1e05a",
+    Go: "#00ADD8",
+    Rust: "#dea584",
+    Python: "#3572A5",
+    C: "#555555",
+    "C++": "#f34b7d",
+    Java: "#b07219",
+    HTML: "#e34c26",
+    CSS: "#563d7c",
+    Shell: "#89e051",
+    Swift: "#F05138",
+  };
+
+  const languages = (() => {
+    const counts: Record<string, number> = {};
+    repos.forEach((repo) => {
+      const lang = repo.primaryLanguage?.name;
+      if (lang) counts[lang] = (counts[lang] || 0) + 1;
+    });
+    const total = Object.values(counts).reduce((a, b) => a + b, 0) || 1;
+    return Object.entries(counts)
+      .sort((a, b) => b[1] - a[1])
+      .slice(0, 6)
+      .map(([name, count]) => ({
+        name,
+        value: Math.round((count / total) * 100),
+        color: langColorMap[name] || "#8b949e",
+      }));
+  })();
+
+  // Top 3 languages for badges
+  const topLangs = languages.slice(0, 3).map((l) => l.name);
 
   const activeRepos = [
     { name: "payments-gateway", commits: 32 },
     { name: "StartDB", commits: 30 },
     { name: "sebi-hackathon", commits: 28 },
     { name: "AutoThumb", commits: 26 },
-  ];
-
-  const languages = [
-    { name: "TypeScript", value: 28, color: "#3178c6" },
-    { name: "Go", value: 21, color: "#00ADD8" },
-    { name: "Rust", value: 11, color: "#dea584" },
-    { name: "Python", value: 10, color: "#3572A5" },
-    { name: "JavaScript", value: 6, color: "#f1e05a" },
-    { name: "C", value: 5, color: "#8b949e" },
   ];
 
   const grid = [
@@ -71,7 +101,14 @@ export default function ProfilePage() {
 
   const maxCommits = 32;
 
-  return (
+  return loading ? (
+    <div className="min-h-screen bg-[#0d1117] flex items-center justify-center">
+      <div className="flex flex-col items-center gap-3">
+        <div className="size-8 border-2 border-[#ff8c00] border-t-transparent rounded-full animate-spin" />
+        <p className="text-[#8b949e] text-sm font-mono">Loading profile…</p>
+      </div>
+    </div>
+  ) : (
     <div className="min-h-screen bg-[#0d1117] text-[#e8eaed] font-mono">
       {/* ═══════════ HEADER ═══════════ */}
       <header className="border-b border-[#21262d] px-6 md:px-10 py-8">
@@ -81,19 +118,21 @@ export default function ProfilePage() {
             {/* Avatar with orange left accent */}
             <div className="relative flex-shrink-0">
               <div className="absolute left-0 top-0 bottom-0 w-1 rounded-full bg-[#ff8c00]" />
-              <img
-                src="https://api.dicebear.com/7.x/avataaars/svg?seed=Bhupesh"
-                alt="Bhupesh Kumar"
+              <Image
+                src={user?.avatarUrl ?? ""}
+                alt={user?.name ?? "GitHub avatar"}
+                width={80}
+                height={80}
                 className="w-16 h-16 md:w-20 md:h-20 rounded-md ml-2 bg-[#161b22]"
               />
-              {/* Online dot */}
+
               <span className="absolute -bottom-0.5 right-0 size-3 rounded-full bg-[#ff8c00] border-2 border-[#0d1117]" />
             </div>
 
             <div className="min-w-0">
               <div className="flex items-center gap-3">
                 <h1 className="text-xl md:text-2xl font-bold tracking-tight text-[#e8eaed] truncate">
-                  Bhupesh Kumar
+                  {user?.name ?? "—"}
                 </h1>
                 {/* Action icons */}
                 <button className="text-[#8b949e] hover:text-[#ff8c00] transition-colors">
@@ -106,9 +145,11 @@ export default function ProfilePage() {
                   <Share2 className="size-4" />
                 </button>
               </div>
-              <p className="text-[#8b949e] text-sm mt-0.5">@Bhup-GitHUB</p>
+              <p className="text-[#8b949e] text-sm mt-0.5">
+                @{user?.login ?? "—"}
+              </p>
               <p className="text-[#8b949e] text-sm mt-2 italic">
-                judge me idc :)
+                {user?.bio ?? ""}
               </p>
             </div>
           </div>
@@ -118,13 +159,17 @@ export default function ProfilePage() {
             {/* Repos / Followers */}
             <div className="flex gap-6">
               <div className="text-center">
-                <div className="text-3xl font-bold text-[#e8eaed]">193</div>
+                <div className="text-3xl font-bold text-[#e8eaed]">
+                  {user?.repositories.totalCount ?? "—"}
+                </div>
                 <p className="text-[10px] text-[#8b949e] uppercase tracking-[0.15em] mt-0.5">
                   Repos
                 </p>
               </div>
               <div className="text-center">
-                <div className="text-3xl font-bold text-[#e8eaed]">79</div>
+                <div className="text-3xl font-bold text-[#e8eaed]">
+                  {user?.followers.totalCount ?? "—"}
+                </div>
                 <p className="text-[10px] text-[#8b949e] uppercase tracking-[0.15em] mt-0.5">
                   Followers
                 </p>
@@ -156,12 +201,11 @@ export default function ProfilePage() {
           </h2>
           <div className="rounded-lg border border-[#21262d] bg-[#161b22] p-6">
             <p className="text-[#c9d1d9] text-sm leading-relaxed">
-              Bhupesh Kumar works at Dizzaract and maintains projects spanning
-              TypeScript, Rust, Swift, and Python. Built a Cloudflare Workers
-              clone implementation. Developed a payments gateway system in Rust.
-              Created tooling for torrent-to-R2 operations and serverless
-              backend templates. Contributed 1809 commits in the last year with
-              15 merged external pull requests.
+              {user?.name ?? "This user"} maintains{" "}
+              {user?.repositories.totalCount ?? 0} public repositories spanning{" "}
+              {topLangs.join(", ") || "various languages"}. Has{" "}
+              {user?.followers.totalCount ?? 0} followers and follows{" "}
+              {user?.following.totalCount ?? 0} developers on GitHub.
             </p>
           </div>
         </div>
@@ -286,32 +330,37 @@ export default function ProfilePage() {
               <p className="text-[10px] text-[#8b949e] uppercase tracking-[0.15em]">
                 Projects
               </p>
-              <p className="text-[10px] text-[#8b949e]">50 original</p>
+              <p className="text-[10px] text-[#8b949e]">
+                {repos.length} pinned
+              </p>
             </div>
             <div className="space-y-1">
-              {projects.map((project) => (
-                <div
-                  key={project.name}
+              {repos.map((repo) => (
+                <a
+                  key={repo.name}
+                  href={repo.url}
+                  target="_blank"
+                  rel="noopener noreferrer"
                   className="group flex items-start justify-between py-3 border-b border-[#21262d] last:border-0 cursor-pointer hover:bg-[#1c2128] -mx-2 px-2 rounded transition-colors"
                 >
                   <div className="min-w-0 flex-1">
                     <h3 className="text-sm font-semibold text-[#e8eaed] group-hover:text-[#ff8c00] transition-colors">
-                      {project.name}
+                      {repo.name}
                     </h3>
-                    {project.description && (
+                    {repo.homepageUrl && (
                       <p className="text-xs text-[#8b949e] mt-0.5 truncate">
-                        {project.description}
+                        {repo.homepageUrl}
                       </p>
                     )}
                   </div>
                   <div className="flex items-center gap-2 ml-3 flex-shrink-0 text-xs text-[#8b949e]">
-                    <span>{project.language}</span>
+                    <span>{repo.primaryLanguage?.name ?? "—"}</span>
                     <Star className="size-3 text-[#ff8c00]" />
                     <span className="text-[#ff8c00] tabular-nums">
-                      {project.stars}
+                      {repo.stargazerCount}
                     </span>
                   </div>
-                </div>
+                </a>
               ))}
             </div>
           </div>
@@ -324,7 +373,7 @@ export default function ProfilePage() {
                 In Public Repos
               </p>
               <div className="flex flex-wrap gap-2">
-                {["TypeScript", "Go", "Rust"].map((lang) => (
+                {topLangs.map((lang) => (
                   <span
                     key={lang}
                     className="px-3 py-1 rounded-full text-xs font-semibold bg-[#ff8c00] text-[#0d1117]"
