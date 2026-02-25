@@ -1,42 +1,41 @@
 "use client";
 
-import {
-  Copy,
-  Share2,
-  ExternalLink,
-  Star,
-  GitCommit,
-  GitPullRequest,
-  AlertCircle,
-  Eye,
-  Building2,
-  Wifi,
-} from "lucide-react";
+import { Copy, Share2, ExternalLink, Star, GitCommit, GitPullRequest, AlertCircle, Eye, Building2, Wifi} from "lucide-react";
+import {getGithubUser , getGithubRepos} from "./api/github.api";
+import { useEffect, useState } from "react";
+import { GithubRepo , GithubUser } from "./api/types";
 
 export default function ProfilePage() {
+
+  const [user, setUser] = useState<GithubUser | null>(null);
+  const [repos, setRepos] = useState<GithubRepo[]>([]);
+
+  useEffect(() => {
+    async function loadData() {
+      try {
+        const userRes = await getGithubUser("Bhup-GitHUB");
+        const repoRes = await getGithubRepos("Bhup-GitHUB",10);
+
+        console.log("USER:", userRes.data.user);
+        console.log("REPOS:", repoRes.data.user.repositories.nodes);
+
+        setUser(userRes.data.user);
+        setRepos(repoRes.data.user.repositories.nodes);
+      } catch (err) {
+        console.error("Error loading GitHub data:", err);
+      }
+    }
+
+    loadData();
+  }, []);
+
   const projects = [
-    {
-      name: "electron-p2p",
-      language: "JavaScript",
-      stars: 21,
-      description: "",
-    },
+    {name: "electron-p2p",language: "JavaScript",stars: 21,description: ""},
     { name: "video-pipeline", language: "Go", stars: 18, description: "" },
     { name: "wp-des", language: "TypeScript", stars: 19, description: "" },
     { name: "payments-gateway", language: "Rust", stars: 8, description: "" },
-    {
-      name: "StartDB",
-      language: "Go",
-      stars: 6,
-      description: "StartDB is a next-generation...",
-    },
-    {
-      name: "cf-workers-clone",
-      language: "TypeScript",
-      stars: 4,
-      description: "cloudflare workers clone",
-    },
-  ];
+    { name: "StartDB", language: "Go", stars: 6, description: "StartDB is a next-generation...", },
+    { name: "cf-workers-clone", language: "TypeScript", stars: 4, description: "cloudflare workers clone"}];
 
   const activeRepos = [
     { name: "payments-gateway", commits: 32 },
@@ -54,7 +53,6 @@ export default function ProfilePage() {
     { name: "C", value: 5, color: "#8b949e" },
   ];
 
-  // Contribution grid levels (0–4)
   const grid = [
     [3, 2, 0, 4, 1, 3, 2, 0, 1, 4, 2, 3],
     [0, 3, 4, 1, 2, 0, 3, 1, 4, 2, 0, 3],
