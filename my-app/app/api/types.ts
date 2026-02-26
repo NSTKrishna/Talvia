@@ -13,6 +13,41 @@ export interface GithubUser {
   repositories: {
     totalCount: number;
   };
+  contributionsCollection: {
+    totalCommitContributions: number;
+    totalPullRequestContributions: number;
+    totalIssueContributions: number;
+    totalPullRequestReviewContributions: number;
+    pullRequestContributionsByRepository: {
+      repository: {
+        name: string;
+        owner: {
+          login: string;
+        };
+      };
+      contributions: {
+        totalCount: number;
+        nodes: {
+          pullRequest: {
+            state: string;
+            baseRepository: {
+              owner: {
+                login: string;
+              };
+            };
+          };
+        }[];
+      };
+    }[];
+  };
+  organizations?: {
+    nodes: {
+      login: string;
+      name: string | null;
+      avatarUrl: string;
+      url: string;
+    }[];
+  };
 }
 
 export interface GithubRepo {
@@ -29,4 +64,20 @@ export interface GithubRepo {
       name: string;
     }[];
   };
+}
+
+export interface GithubCommit {
+  repositories: {
+    nodes: {
+      name: string;
+      defaultBranchRef: {
+        target: {
+          __typename?: "Commit";
+          history: {
+            totalCount: number;
+          };
+        } | null;
+      } | null;
+    }[];
+  } | null;
 }

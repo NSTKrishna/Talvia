@@ -1,22 +1,49 @@
-import { gql} from "@apollo/client";
+import { gql } from "@apollo/client";
 
 export const GET_GITHUB_USER = gql`
   query GetGithubUser($username: String!) {
     user(login: $username) {
-        login
-        name
-        bio
-        avatarUrl
-        url
-        followers {
+      login
+      name
+      bio
+      avatarUrl
+      url
+      followers {
+        totalCount
+      }
+      following {
+        totalCount
+      }
+      repositories {
+        totalCount
+      }
+      contributionsCollection {
+        totalCommitContributions
+        totalPullRequestContributions
+        totalIssueContributions
+        totalPullRequestReviewContributions
+        pullRequestContributionsByRepository(maxRepositories: 100) {
+          repository {
+            name
+            owner {
+              login
+            }
+          }
+          contributions(first: 10) {
             totalCount
+            nodes {
+              pullRequest {
+                state
+                baseRepository {
+                  owner {
+                    login
+                  }
+                }
+              }
+            }
+          }
         }
-        following {
-            totalCount
-        }
-        repositories {
-            totalCount
-        }
+      }
     }
   }
 `;
@@ -47,4 +74,28 @@ export const GET_GITHUB_REPOS = gql`
       }
     }
   }
+`;
+
+export const TopReposByCommits = gql`
+    query GetRepos($username: String!, $limit: Int!) {
+    user(login: $username) {
+        repositories(
+        first: $limit
+        orderBy: { field: UPDATED_AT, direction: DESC }
+        ) {
+        nodes {
+            name
+            defaultBranchRef {
+            target {
+                ... on Commit {
+                history(first: 0) {
+                    totalCount
+                }
+                }
+            }
+            }
+        }
+        }
+    }
+    }
 `;
