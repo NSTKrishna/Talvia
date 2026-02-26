@@ -4,8 +4,6 @@ import { print } from "graphql";
 const GITHUB_API = "https://api.github.com/graphql";
 const TOKEN = process.env.NEXT_PUBLIC_GITHUB_TOKEN;
 
-console.log(TOKEN)
-
 interface GraphQLResponse<T> {
   data: T;
 }
