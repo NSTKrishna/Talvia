@@ -41,9 +41,9 @@ export default function ProfilePage() {
         const repoRes = await getGithubRepos(username, 10);
         const commitRes = await getGithubCommit(username, 10);
 
-        setUser(userRes.data.user);
-        setRepos(repoRes.data.user.repositories.nodes);
-        setCommit(commitRes.data.user);
+        setUser(userRes.data?.user ?? null);
+        setRepos(repoRes.data?.user?.repositories.nodes ?? []);
+        setCommit(commitRes.data?.user ?? null);
       } catch (err) {
         console.error("Error loading GitHub data:", err);
       } finally {
