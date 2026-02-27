@@ -18,15 +18,17 @@ import {
   getGithubUser,
   getGithubRepos,
   getGithubCommit,
+  getGithubHeatmap
 } from "../api/github.api";
 import { useEffect, useState } from "react";
-import { GithubRepo, GithubUser, GithubCommit } from "../api/types";
+import { GithubRepo, GithubUser, GithubCommit , GithubHeatmap } from "../api/types";
 
 export default function ProfilePage() {
   const [user, setUser] = useState<GithubUser | null>(null);
   const [repos, setRepos] = useState<GithubRepo[]>([]);
   const [commit, setCommit] = useState<GithubCommit | null>(null);
   const [loading, setLoading] = useState(true);
+  const [heatmap, setHeatmap] = useState<GithubHeatmap | null >(null);
   const params = useParams();
   const router = useRouter();
   const username = params.username as string;
@@ -40,7 +42,9 @@ export default function ProfilePage() {
         const userRes = await getGithubUser(username);
         const repoRes = await getGithubRepos(username, 10);
         const commitRes = await getGithubCommit(username, 10);
+        const heatmapRes = await getGithubHeatmap(username, new Date("2026-01-01T00:00:00Z"), new Date());
 
+        setHeatmap(heatmapRes.data?.user?.contributionsCollection?.contributionCalendar ?? null);
         setUser(userRes.data?.user ?? null);
         setRepos(repoRes.data?.user?.repositories.nodes ?? []);
         setCommit(commitRes.data?.user ?? null);
@@ -115,19 +119,14 @@ export default function ProfilePage() {
 
   const maxCommits = activeRepos[0]?.commits || 1;
 
-  const grid = [
-    [3, 2, 0, 4, 1, 3, 2, 0, 1, 4, 2, 3],
-    [0, 3, 4, 1, 2, 0, 3, 1, 4, 2, 0, 3],
-    [2, 0, 1, 3, 4, 2, 1, 3, 0, 2, 4, 1],
-    [1, 4, 2, 0, 3, 1, 4, 0, 2, 3, 1, 2],
-    [0, 2, 3, 1, 0, 4, 2, 3, 1, 0, 3, 4],
-  ];
+  const days = heatmap?.weeks.flatMap(week => week.contributionDays) ?? [];
+
 
   const gridColor = (level: number) => {
     if (level === 0) return "bg-[#161b22]";
-    if (level === 1) return "bg-[#ff8c00]/20";
-    if (level === 2) return "bg-[#ff8c00]/40";
-    if (level === 3) return "bg-[#ff8c00]/65";
+    if (level >= 5) return "bg-[#ff8c00]/20";
+    if (level >= 10) return "bg-[#ff8c00]/40";
+    if (level >= 15) return "bg-[#ff8c00]/65";
     return "bg-[#ff8c00]";
   };
 
@@ -222,18 +221,27 @@ export default function ProfilePage() {
             </div>
 
             {/* Contribution grid */}
-            <div className="hidden lg:flex flex-col gap-[3px]">
-              {grid.map((row, ri) => (
-                <div key={ri} className="flex gap-[3px]">
-                  {row.map((level, ci) => (
+          <div className="p-4 border rounded-lg bg-[#0d1117]">
+            <h3 className="mb-4 text-sm font-semibold text-gray-700">
+              {heatmap?.totalContributions} contributions in the last year
+            </h3>
+
+            <div className="flex gap-[3px]">
+              {heatmap?.weeks.map((week, weekIndex) => (
+                <div key={weekIndex} className="flex flex-col gap-[3px]">
+                  {week.contributionDays.map((day) => (
                     <div
-                      key={ci}
-                      className={`size-[10px] rounded-[2px] ${gridColor(level)}`}
+                      key={day.date}
+                      className={`w-[12px] h-[12px] rounded-sm ${gridColor(
+                        day.contributionCount
+                      )}`}
+                      title={`${day.date} - ${day.contributionCount} contributions`}
                     />
                   ))}
                 </div>
               ))}
             </div>
+          </div>
           </div>
         </div>
       </header>

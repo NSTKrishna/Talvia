@@ -3,6 +3,7 @@ import {
   GET_GITHUB_USER,
   GET_GITHUB_REPOS,
   TopReposByCommits,
+  GET_HEATMAP
 } from "./github.queries";
 import type { GithubUser, GithubRepo, GithubCommit } from "./types";
 
@@ -24,4 +25,22 @@ export function getGithubCommit(username: string, limit: number) {
   return githubRequest<{
     user: GithubCommit;
   }>(TopReposByCommits, { username, limit });
+}
+
+export function getGithubHeatmap(username: string, from: Date, to: Date) {
+  return githubRequest<{
+    user: {
+      contributionsCollection: {
+        contributionCalendar: {
+          totalContributions: number;
+          weeks: {
+            contributionDays: {
+              date: string;
+              contributionCount: number;
+            }[];
+          }[];
+        };
+      };
+    };
+  }>(GET_HEATMAP, { username, from, to });
 }

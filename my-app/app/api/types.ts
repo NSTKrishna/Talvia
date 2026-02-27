@@ -81,3 +81,14 @@ export interface GithubCommit {
     }[];
   } | null;
 }
+
+
+export interface GithubHeatmap {
+  totalContributions: number;
+  weeks: {
+    contributionDays: {
+      date: string;
+      contributionCount: number;
+    }[];
+  }[];
+}

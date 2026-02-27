@@ -99,3 +99,34 @@ export const TopReposByCommits = gql`
     }
     }
 `;
+
+export const GET_HEATMAP = gql`
+  query ($username: String! , $from: DateTime! , $to: DateTime!) {
+    user(login: $username) {
+      contributionsCollection(from: $from, to: $to) {
+        contributionCalendar {
+          totalContributions
+          weeks {
+            contributionDays {
+              date
+              contributionCount
+            }
+          }
+        }
+      }
+    }
+  }
+`
+
+            // <div className="hidden lg:flex flex-col gap-[3px]">
+            //   {grid.map((row, ri) => (
+            //     <div key={ri} className="flex gap-[3px]">
+            //       {row.map((level, ci) => (
+            //         <div
+            //           key={ci}
+            //           className={`size-[10px] rounded-[2px] ${gridColor(level)}`}
+            //         />
+            //       ))}
+            //     </div>
+            //   ))}
+            // </div>
